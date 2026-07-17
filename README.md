@@ -1,4 +1,4 @@
-# my_platform
+# H-hub
 
 Minha plataforma
 
