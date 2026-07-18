@@ -7,8 +7,8 @@ Monorepo com front e back no mesmo repositório.
 
 | Pasta   | O que é                                                        |
 |---------|----------------------------------------------------------------|
-| `app/`  | Front — app **Flutter** (Android, Windows e web).              |
-| `api/`  | Back — API **Go** + **PostgreSQL** (banco compartilhado do homelab). |
+| `app/`    | Front — app **Flutter** (Android, Windows e web).              |
+| `server/` | Back — API **Go** + **PostgreSQL** (banco compartilhado do homelab). |
 
 ## Estado
 

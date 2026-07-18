@@ -1,4 +1,4 @@
-# api — backend do H-hub
+# server — backend do H-hub
 
 API em **Go** + **PostgreSQL** (instância compartilhada do homelab, banco `my_platform`).
 
