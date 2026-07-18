@@ -1,16 +1,20 @@
 # H-hub
 
-Minha plataforma
+Hub pessoal multi-usuário: vários módulos (o primeiro é o **Financeiro**) num só app.
+Monorepo com front e back no mesmo repositório.
 
-## Getting Started
+## Estrutura
 
-This project is a starting point for a Flutter application.
+| Pasta   | O que é                                                        |
+|---------|----------------------------------------------------------------|
+| `app/`  | Front — app **Flutter** (Android, Windows e web).              |
+| `api/`  | Back — API **Go** + **PostgreSQL** (banco compartilhado do homelab). |
 
-A few resources to get you started if this is your first Flutter project:
+## Estado
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **`app/`** — funcionando (Financeiro com SQLite local no dispositivo).
+- **`api/`** — a começar. Roadmap: (1) API + Postgres (CRUD, aprender Go),
+  (2) login/multi-usuário, (3) E2EE nos campos sensíveis.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Contexto e decisões de arquitetura ficam no vault do homelab
+(`~/Documents/Homelab`, nota "App Flutter - versão web").
