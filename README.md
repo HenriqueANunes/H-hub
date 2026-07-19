@@ -13,7 +13,7 @@ Monorepo com front e back no mesmo repositório.
 ## Estado
 
 - **`app/`** — funcionando (Financeiro com SQLite local no dispositivo).
-- **`api/`** — a começar. Roadmap: (1) API + Postgres (CRUD, aprender Go),
+- **`server/`** — a começar. Roadmap: (1) API + Postgres (CRUD, aprender Go),
   (2) login/multi-usuário, (3) E2EE nos campos sensíveis.
 
 Contexto e decisões de arquitetura ficam no vault do homelab
