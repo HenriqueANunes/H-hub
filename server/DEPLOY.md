@@ -16,6 +16,9 @@ self-hosted runner** na própria máquina faz o deploy a cada push na `master`.
 
 Os passos abaixo rodam **uma vez**. Depois disso, deploy é só dar push.
 
+> ✅ **Executado em 2026-07-26.** Ficam aqui como referência — para refazer o
+> servidor do zero, ou para montar o deploy de outro serviço no mesmo molde.
+
 ### 1. Clonar o repositório
 
 ```bash
@@ -58,26 +61,35 @@ não reaplica nada.
 Um runner por repositório, como já é o caso do site e do Hbot. Pegar o token em
 **Settings → Actions → Runners → New self-hosted runner** do repo `H-hub`:
 
+A própria página do GitHub monta os comandos com a versão e o hash do momento —
+usar os de lá, não os daqui. O que foi feito em 2026-07-26 (runner `2.336.0`):
+
 ```bash
 mkdir /home/hman/actions-runner-h-hub && cd /home/hman/actions-runner-h-hub
-curl -o actions-runner.tar.gz -L <url-do-tarball-que-a-página-do-GitHub-mostra>
-tar xzf actions-runner.tar.gz
+curl -o actions-runner.tar.gz -L <url-do-tarball-que-a-página-mostra>
+echo "<hash-da-página>  actions-runner.tar.gz" | sha256sum -c -
+tar xzf actions-runner.tar.gz && rm actions-runner.tar.gz
 
 ./config.sh --url https://github.com/HenriqueANunes/H-hub \
             --token <token-da-página> \
             --name hserver-h-hub \
-            --labels self-hosted \
             --unattended
 
+# Estes dois pedem senha: o sudo do servidor não é passwordless.
 sudo ./svc.sh install hman
 sudo ./svc.sh start
 ```
 
-O runner roda como `hman`, que já está no grupo `docker` (os outros dois runners
-do servidor dependem disso).
+Sem `--labels`: os labels `self-hosted`, `Linux` e `X64` já vêm por padrão, e o
+runner é registrado **no repositório** — então `runs-on: self-hosted` no workflow
+já é inequívoco. Os runners do site e do Hbot não enxergam os jobs deste repo.
 
-Como o runner é registrado **no repositório**, o label `self-hosted` sozinho já é
-inequívoco — os runners do site e do Hbot não enxergam os jobs deste repo.
+O runner roda como `hman`, que já está no grupo `docker` (os outros dois runners
+do servidor dependem disso). O serviço fica `enabled`, então volta sozinho depois
+de um reboot.
+
+O token de registro dura cerca de 1 hora e é consumido no `config.sh` — gerar só
+na hora de usar.
 
 ## Operação
 
