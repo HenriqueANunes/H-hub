@@ -20,7 +20,7 @@ Monorepo com front e back no mesmo repositório.
 
 ## API
 
-Base: `http://localhost:8080` (dev). Tudo JSON. Fora de `/auth/register` e
+Base: `http://100.80.9.52:8090` (dev). Tudo JSON. Fora de `/auth/register` e
 `/auth/login`, toda rota exige `Authorization: Bearer <token>`.
 
 | Rota | O que faz |
@@ -67,7 +67,7 @@ os antigos. Ainda são aplicadas à mão no servidor.
 ### `app/`
 
 ```bash
-cd app && flutter run -d linux --dart-define=API_BASE_URL=http://localhost:8080
+cd app && flutter run -d linux --dart-define=API_BASE_URL=http://100.80.9.52:8090
 ```
 
 `flutter test` inclui testes de contrato que **batem na API de verdade** — sem o
