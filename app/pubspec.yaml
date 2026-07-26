@@ -30,12 +30,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.2.2
   intl: ^0.20.2
   number_text_input_formatter: ^1.0.0+8
-  path: ^1.9.1
-  sqflite: ^2.4.2
-  sqflite_common_ffi: ^2.3.6
-  sqlite3_flutter_libs: ^0.5.7
+  shared_preferences: ^2.3.3
   win32audio: ^1.4.0
 
   # The following adds the Cupertino Icons font to your application.

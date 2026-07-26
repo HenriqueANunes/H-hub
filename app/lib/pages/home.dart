@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import '../widgets/animated_square.dart';
 
 class HomePage extends StatelessWidget {
@@ -10,6 +11,13 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Meu App'),
+        actions: [
+          IconButton(
+            onPressed: AuthService.instance.logout,
+            tooltip: 'Sair',
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
       body: Column(
         children: [

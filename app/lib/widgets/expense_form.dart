@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_platform/models/expense_model.dart';
+import 'package:my_platform/services/api_client.dart';
 import 'package:my_platform/services/currency_formatter.dart';
 import 'package:my_platform/services/expense_service.dart';
 
@@ -17,6 +18,7 @@ class ExpenseFormState extends State<ExpenseForm> {
   final _name = TextEditingController();
   final _value = TextEditingController();
   bool _isCredit = false;
+  bool _isSaving = false;
   DateTimeRange? _dateRange;
 
   final _formKey = GlobalKey<FormState>();
@@ -32,10 +34,10 @@ class ExpenseFormState extends State<ExpenseForm> {
           .format(widget.expense!.value);
       _isCredit = widget.expense!.isCredit;
 
-      if (widget.expense!.date_start != null) {
+      if (widget.expense!.dateStart != null) {
         _dateRange = DateTimeRange(
-          start: widget.expense!.date_start!,
-          end: widget.expense!.date_end ?? widget.expense!.date_start!,
+          start: widget.expense!.dateStart!,
+          end: widget.expense!.dateEnd ?? widget.expense!.dateStart!,
         );
       }
     } else {
@@ -118,11 +120,13 @@ class ExpenseFormState extends State<ExpenseForm> {
             ),
             const SizedBox(height: 20.0),
             ElevatedButton.icon(
-              onPressed: () {
-                if (_formKey.currentState!.validate()){
-                  _saveExpense();
-                }
-              },
+              onPressed: _isSaving
+                  ? null
+                  : () {
+                      if (_formKey.currentState!.validate()){
+                        _saveExpense();
+                      }
+                    },
               icon: const Icon(Icons.save),
               label: Text(widget.expense == null ? 'Salvar' : 'Atualizar'),
             ),
@@ -143,29 +147,33 @@ class ExpenseFormState extends State<ExpenseForm> {
     }
   }
 
-  _saveExpense() {
-    final dateStart = _dateRange?.start;
-    final dateEnd = _dateRange?.end;
-    final cleanValue = _value.text
-        .replaceAll('R\$', '')
-        .replaceAll('.', '')
-        .replaceAll(',', '.')
-        .trim();
-
+  Future<void> _saveExpense() async {
     final expense = ExpenseModel(
       id: widget.expense?.id,
-      name: _name.text,
-      value: double.tryParse(cleanValue) ?? 0.0,
-      date_start: dateStart,
-      date_end: dateEnd,
-      type: 'exit',
+      name: _name.text.trim(),
+      valueCents: ExpenseModel.centsFromReais(
+        CurrencyInputFormatter.deformatString(_value.text),
+      ),
+      dateStart: _dateRange?.start,
+      dateEnd: _dateRange?.end,
       isCredit: _isCredit,
     );
 
-    // add it to database.
-    ExpenseService().saveExpense(expenseObj: expense);
+    setState(() => _isSaving = true);
 
-    // close the bottomsheet
-    Navigator.of(context).pop(true);
+    try {
+      await ExpenseService().saveExpense(expenseObj: expense);
+      if (mounted) {
+        // fecha o bottomsheet pedindo o refresh da lista
+        Navigator.of(context).pop(true);
+      }
+    } on ApiException catch (e) {
+      // Erro do servidor: mantém o formulário aberto com o que foi digitado.
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
   }
 }

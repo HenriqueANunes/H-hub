@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:my_platform/models/expense_model.dart';
 import 'package:my_platform/widgets/expense_form.dart';
+import 'package:my_platform/services/api_client.dart';
 import 'package:my_platform/services/expense_service.dart';
 
 Widget expenseTile(BuildContext context, ExpenseModel expense, ThemeData theme, VoidCallback onRefresh) {
@@ -11,25 +12,30 @@ Widget expenseTile(BuildContext context, ExpenseModel expense, ThemeData theme, 
   );
   final _expenseObj = ExpenseService();
 
-  void _deleteExpense() async {
-    showDialog(context: context, builder: (context) {
+  void _deleteExpense() {
+    // Guardado antes do await: depois dele o context do diálogo já morreu.
+    final messenger = ScaffoldMessenger.of(context);
+
+    showDialog(context: context, builder: (dialogContext) {
       return AlertDialog(
         title: Text('Deletar Despesa'),
         content: Text('Tem certeza que você quer deletar essa despesa?'),
         actions: [
           MaterialButton(
             onPressed: () async {
-              final status = await _expenseObj.deleteExpense(expense.id!);
-              if (status) {
+              Navigator.pop(dialogContext);
+              try {
+                await _expenseObj.deleteExpense(expense.id!);
                 onRefresh();
+              } on ApiException catch (e) {
+                messenger.showSnackBar(SnackBar(content: Text(e.message)));
               }
-              Navigator.pop(context);
             },
             child: Text('Sim'),
           ),
           MaterialButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
             },
             child: Text('Não'),
           ),

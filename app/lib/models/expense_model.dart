@@ -1,55 +1,66 @@
 class ExpenseModel {
   final int? id;
   final String name;
-  final double value;
-  final DateTime? date_start;
-  final DateTime? date_end;
+
+  /// A API guarda dinheiro em centavos (inteiro) — a conversão pra reais é só
+  /// na borda, aqui. Nunca deixe um double virar a fonte da verdade do valor.
+  final int valueCents;
+
+  final DateTime? dateStart;
+  final DateTime? dateEnd;
   final String type;
   final bool isCredit;
-  final bool status;
 
-  ExpenseModel({
+  const ExpenseModel({
     this.id,
     required this.name,
-    required this.value,
-    this.date_start,
-    this.date_end,
-    required this.type,
+    required this.valueCents,
+    this.dateStart,
+    this.dateEnd,
+    this.type = typeExit,
     this.isCredit = false,
-    this.status = true,
   });
 
-  // 'Object' to 'Map'
-  Map<String, dynamic> toMap() {
-    var map = Map<String, dynamic>();
+  /// Espelham o CHECK da tabela `expenses`.
+  static const typeExit = 'exit';
+  static const typeEntry = 'entry';
 
-    if (id != null) {
-      map['id'] = id;
-    }
+  /// Valor em reais, pra exibição e pros cálculos da tela.
+  double get value => valueCents / 100;
 
-    map['name'] = name;
-    map['value'] = value;
-    map['date_start'] = date_start?.millisecondsSinceEpoch;
-    map['date_end'] = date_end?.millisecondsSinceEpoch;
+  static int centsFromReais(double reais) => (reais * 100).round();
 
-    map['type'] = type;
-    map['is_credit'] = isCredit == true ? 1 : 0;
+  /// Só os campos que a API aceita: `id` vem da URL e `user_id` vem do token.
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'value_cents': valueCents,
+    'date_start': _encodeDate(dateStart),
+    'date_end': _encodeDate(dateEnd),
+    'type': type,
+    'is_credit': isCredit,
+  };
 
-    return map;
-  }
-
-  // 'Map' to 'Object'
-  factory ExpenseModel.fromJson(Map<String, dynamic> data) => ExpenseModel(
-    id: data['id'],
-    name: data['name'],
-    value: data['value'],
-    date_start: data['date_start'] != null
-        ? DateTime.fromMillisecondsSinceEpoch(data['date_start'])
-        : null,
-    date_end: data['date_end'] != null
-        ? DateTime.fromMillisecondsSinceEpoch(data['date_end'])
-        : null,
-    type: data['type'],
-    isCredit: data['is_credit'] == 1,
+  factory ExpenseModel.fromJson(Map<String, dynamic> json) => ExpenseModel(
+    id: json['id'] as int?,
+    name: json['name'] as String,
+    valueCents: json['value_cents'] as int,
+    dateStart: _decodeDate(json['date_start']),
+    dateEnd: _decodeDate(json['date_end']),
+    type: json['type'] as String,
+    isCredit: json['is_credit'] as bool,
   );
+}
+
+/// As colunas de data no Postgres não têm hora. Manda meia-noite em UTC pra o
+/// fuso (-03:00) não empurrar a despesa pro dia anterior no caminho.
+String? _encodeDate(DateTime? date) => date == null
+    ? null
+    : DateTime.utc(date.year, date.month, date.day).toIso8601String();
+
+/// Lê só a parte de data e devolve o mesmo dia como data local, pelo mesmo
+/// motivo — `toLocal()` aqui voltaria um dia.
+DateTime? _decodeDate(Object? raw) {
+  if (raw == null) return null;
+  final parsed = DateTime.parse(raw as String);
+  return DateTime(parsed.year, parsed.month, parsed.day);
 }

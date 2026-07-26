@@ -27,7 +27,7 @@ class CustomTheme {
           color: Colors.white,
         ),
       ),
-      bottomAppBarTheme: BottomAppBarTheme(
+      bottomAppBarTheme: BottomAppBarThemeData(
         color: Colors.grey.shade900,
         height: 70,
         shadowColor: Colors.black,

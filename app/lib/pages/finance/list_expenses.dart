@@ -15,7 +15,7 @@ class ListExpensesPage extends StatefulWidget {
 
 class ExpensesList extends State<ListExpensesPage> {
   final _expenseObj = ExpenseService();
-  late Future<List<ExpenseModel?>> _expensesList;
+  late Future<List<ExpenseModel>> _expensesList;
   late Future<double> _expensesTotal;
 
   final NumberFormat _formatter = NumberFormat.currency(
@@ -45,7 +45,7 @@ class ExpensesList extends State<ListExpensesPage> {
       appBar: AppBar(
         title: const Text('Despesas cadastradas'),
       ),
-      body: FutureBuilder<List<ExpenseModel?>>(
+      body: FutureBuilder<List<ExpenseModel>>(
         future: _expensesList,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -64,8 +64,12 @@ class ExpensesList extends State<ListExpensesPage> {
                   },
                   itemCount: expensesList == null ? 0 : expensesList.length,
                   itemBuilder: (context, index) {
-                    final expense = expensesList![index];
-                    return expenseTile(context, expense!, theme, _refreshData);
+                    return expenseTile(
+                      context,
+                      expensesList![index],
+                      theme,
+                      _refreshData,
+                    );
                   },
                 ),
               );
