@@ -6,8 +6,11 @@ self-hosted runner** na própria máquina faz o deploy a cada push na `master`.
 - **Host:** servidor Acer (`ssh hserver`)
 - **Diretório:** `/home/hman/h-hub` (clone do repo)
 - **Container:** `h-hub-api`, na rede Docker `postgres`
-- **Exposição:** `100.80.9.52:8080` — só pela interface do Tailscale, igual ao Postgres.
+- **Exposição:** `100.80.9.52:8090` — só pela interface do Tailscale, igual ao Postgres.
   Nada de LAN, nada de internet.
+
+⚠️ **Porta 8090 no host, não 8080**: a 8080 do servidor é do Pi-hole, que roda em
+`network_mode: host`. Dentro do container a API continua escutando na 8080.
 
 ## Setup único
 
@@ -96,7 +99,7 @@ O workflow (`.github/workflows/deploy-api.yml`) só dispara em push que toque em
 ## Apontar o app para o servidor
 
 ```bash
-flutter run -d linux --dart-define=API_BASE_URL=http://100.80.9.52:8080
+flutter run -d linux --dart-define=API_BASE_URL=http://100.80.9.52:8090
 ```
 
 ## Pendências antes de expor publicamente

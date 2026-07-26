@@ -40,7 +40,7 @@ jobs:
           # Sem token o /auth/me responde 401 — é o sinal barato de "está no ar
           # e roteando", sem precisar de credencial no CI.
           code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
-            http://100.80.9.52:8080/auth/me)
+            http://100.80.9.52:8090/auth/me)
           if [ "$code" != "401" ]; then
             echo "API não respondeu como esperado (HTTP $code). Logs:"
             docker logs --tail 50 h-hub-api

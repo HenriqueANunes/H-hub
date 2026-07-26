@@ -15,7 +15,10 @@ services:
     ports:
       # Publicada só na interface do Tailscale, igual ao Postgres — nada de LAN
       # nem de internet. O Tailscale já cifra, então o JWT não viaja em texto.
-      - "100.80.9.52:8080:8080"
+      #
+      # Host 8090 (a 8080 é do Pi-hole, que roda em network_mode: host);
+      # dentro do container a API segue na 8080.
+      - "100.80.9.52:8090:8080"
     networks:
       - postgres
 
