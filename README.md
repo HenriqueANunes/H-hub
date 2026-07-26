@@ -12,8 +12,9 @@ Monorepo com front e back no mesmo repositório.
 
 ## Estado
 
-- **`server/`** — CRUD do Financeiro + autenticação funcionando, testados contra o
-  Postgres real. Roda local em `:8080`; **ainda não tem deploy** no servidor.
+- **`server/`** — CRUD do Financeiro + autenticação funcionando. **No ar** no servidor
+  do homelab desde 26/07/2026, com deploy contínuo por GitHub Actions. Acessível só
+  pelo Tailscale (`100.80.9.52:8090`) — ver [`server/DEPLOY.md`](server/DEPLOY.md).
 - **`app/`** — migrado do SQLite local para a API: login com token e CRUD por HTTP.
   Sem cache offline — o app não abre sem o servidor no ar.
 
@@ -76,7 +77,7 @@ servidor no ar eles falham.
 
 1. ✅ **API + Postgres** — CRUD do Financeiro em Go.
 2. ✅ **Login / multi-usuário** — bcrypt + JWT, dados escopados por dono.
-3. ⏭️ **Deploy** — container no servidor do homelab + CI (GitHub Actions).
+3. ✅ **Deploy** — container no servidor do homelab + CI (GitHub Actions).
 4. ⏭️ **E2EE** nos campos sensíveis — chave derivada da senha, decifra no Flutter.
 
 Pendências conhecidas: CORS (só quando a web entrar), Android (falta `INTERNET`
