@@ -1,0 +1,25 @@
+# Stack da API do H-hub para o homelab.
+# O banco NÃO fica aqui: usa o PostgreSQL compartilhado do homelab (stack `postgres`),
+# alcançado pela rede Docker externa `postgres`. Ver DEPLOY.md.
+# Convenções: restart unless-stopped, segredos via .env (guardados no Vaultwarden).
+services:
+  api:
+    build: .
+    container_name: h-hub-api
+    restart: unless-stopped
+    environment:
+      # No servidor o host do banco é `postgres` (nome do serviço na rede Docker),
+      # não o IP do Tailscale que o .env de desenvolvimento usa.
+      DATABASE_DSN: ${DATABASE_DSN:?defina DATABASE_DSN no .env}
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env}
+    ports:
+      # Publicada só na interface do Tailscale, igual ao Postgres — nada de LAN
+      # nem de internet. O Tailscale já cifra, então o JWT não viaja em texto.
+      - "100.80.9.52:8080:8080"
+    networks:
+      - postgres
+
+# Rede criada pela stack `postgres` (compartilhada). Precisa existir antes.
+networks:
+  postgres:
+    external: true

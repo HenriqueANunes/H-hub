@@ -40,6 +40,10 @@ func main() {
 	}
 	defer pool.Close()
 
+	if err := database.Migrate(pool); err != nil {
+		log.Fatal("Error running migrations: ", err)
+	}
+
 	authService := auth.NewService(auth.NewRepository(pool), auth.NewTokenIssuer(jwtSecret, tokenTTL))
 	authHandler := auth.NewHandler(authService)
 

@@ -1,0 +1,49 @@
+name: Deploy API
+
+# Deploy contínuo da API Go no servidor do homelab, via GitHub Actions
+# self-hosted runner. A cada push na master que toque em `server/`, o runner
+# atualiza o repo no servidor e sobe o container.
+#
+# Os segredos (DATABASE_DSN, JWT_SECRET) ficam no `server/.env` do servidor, fora
+# do git — o workflow não os toca, e o `git reset --hard` não os apaga porque o
+# arquivo é gitignored.
+#
+# As migrations vão embutidas no binário e rodam no startup, então não há passo
+# manual de schema aqui.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Atualizar código e subir o container
+        run: |
+          set -e
+          cd /home/hman/h-hub
+          git fetch origin master
+          git reset --hard origin/master
+          cd server
+          docker compose up -d --build
+          docker image prune -f
+
+      - name: Conferir se a API respondeu
+        run: |
+          set -e
+          # Dá um tempo pro container subir e rodar as migrations antes de checar.
+          sleep 5
+          # Sem token o /auth/me responde 401 — é o sinal barato de "está no ar
+          # e roteando", sem precisar de credencial no CI.
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+            http://100.80.9.52:8080/auth/me)
+          if [ "$code" != "401" ]; then
+            echo "API não respondeu como esperado (HTTP $code). Logs:"
+            docker logs --tail 50 h-hub-api
+            exit 1
+          fi
+          echo "API no ar."

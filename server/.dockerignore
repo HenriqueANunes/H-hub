@@ -1,0 +1,8 @@
+# Nada aqui pode entrar na imagem: o .env tem a senha do banco e o JWT_SECRET.
+.env
+estudo/
+.idea/
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
