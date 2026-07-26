@@ -1,6 +1,19 @@
 package expenses
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+// ErrNotFound cobre tanto a despesa que não existe quanto a que existe mas é de
+// outro usuário — de fora as duas são indistinguíveis, de propósito.
+var ErrNotFound = errors.New("expense not found")
+
+// Valores aceitos em Expense.Type (espelham o CHECK da tabela).
+const (
+	TypeExit  = "exit"
+	TypeEntry = "entry"
+)
 
 type Expense struct {
 	ID         int64      `json:"id"`
