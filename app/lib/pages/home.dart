@@ -10,7 +10,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Meu App'),
+        title: Text('H-hub'),
         actions: [
           IconButton(
             onPressed: AuthService.instance.logout,
@@ -49,11 +49,6 @@ class HomePage extends StatelessWidget {
                       icon: Icons.attach_money,
                       label: 'Finanças',
                       onTap: () => Navigator.pushNamed(context, '/finance/finance.dart'),
-                    ),
-                    AnimatedSquare(
-                      icon: Icons.surround_sound,
-                      label: 'Dispositivos de Som',
-                      onTap: () => Navigator.pushNamed(context, '/sound/home.dart'),
                     ),
                     // pode adicionar mais cards aqui se quiser
                   ],

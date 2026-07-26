@@ -5,8 +5,6 @@ import 'package:my_platform/themes/theme.dart';
 import 'package:my_platform/pages/finance/finance.dart';
 import 'package:my_platform/pages/finance/monthly_calculation.dart';
 import 'package:my_platform/pages/finance/list_expenses.dart';
-import 'package:my_platform/pages/sound/home.dart';
-import 'package:my_platform/pages/sound/input.dart';
 import 'package:my_platform/widgets/auth_gate.dart';
 
 /// O `AuthGate` precisa esvaziar a pilha de telas quando a sessão cai, e isso
@@ -23,7 +21,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Meu App',
+      // Na web isso vira o título da aba do navegador e sobrescreve o <title> do
+      // web/index.html — por isso o nome definitivo tem que estar aqui também.
+      title: 'H-hub',
       debugShowCheckedModeBanner: false,
       navigatorKey: appNavigatorKey,
       theme: CustomTheme.lightThemeData(context),
@@ -33,8 +33,6 @@ class MyApp extends StatelessWidget {
         '/finance/finance.dart': (context) => const FinancePage(),
         '/finance/monthly_calculation.dart': (context) => const MonthlyCalculationPage(),
         '/finance/list_expenses.dart': (context) => const ListExpensesPage(),
-        '/sound/home.dart': (context) => const SoundPage(),
-        '/sound/input.dart': (context) => const SoundInput(),
       },
     );
   }

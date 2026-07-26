@@ -1,0 +1,25 @@
+# O contexto de build só precisa do que o `flutter build web` consome: lib/, web/,
+# pubspec e assets. O resto é peso morto — `build/` sozinho passa de 1 GB.
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Alvos nativos: não entram no build web.
+android/
+linux/
+windows/
+
+# Testes batem na API de verdade; não rodam dentro do build da imagem.
+test/
+
+# Anotações soltas do projeto.
+gps
+
+# O nginx.conf.template NÃO entra aqui: a etapa final da imagem precisa copiá-lo.
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
+.idea/
+*.iml

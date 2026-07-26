@@ -1,0 +1,50 @@
+name: Deploy Web
+
+# Deploy contínuo do front web (Flutter → estáticos servidos por nginx) no servidor do
+# homelab, no mesmo self-hosted runner que já cuida da API. A cada push na master que
+# toque em `app/`, o runner atualiza o repo no servidor e sobe o container.
+#
+# O runner é registrado no repositório e este é um monorepo, então não precisa de um
+# runner novo — este workflow e o `deploy-api.yml` compartilham o mesmo. Ressalva: um
+# runner roda um job por vez, então um push que mexa nos dois lados enfileira os deploys.
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'app/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Atualizar código e subir o container
+        run: |
+          set -e
+          cd /home/hman/h-hub
+          git fetch origin master
+          git reset --hard origin/master
+          cd app
+          docker compose up -d --build
+          docker image prune -f
+
+      - name: Conferir se o front respondeu
+        run: |
+          set -e
+          # Duas chamadas: a primeira prova que os estáticos estão sendo servidos, a
+          # segunda que o proxy pra API funciona. Sem token o /auth/me responde 401 —
+          # é o sinal barato de "no ar e roteando", sem credencial no CI. Um 502 aqui
+          # significa nginx de pé mas API fora do ar.
+          sleep 3
+          for check in "/ 200" "/auth/me 401"; do
+            set -- $check
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+              "http://100.80.9.52:8091$1")
+            if [ "$code" != "$2" ]; then
+              echo "GET $1 respondeu $code, esperado $2. Logs:"
+              docker logs --tail 50 h-hub-web
+              exit 1
+            fi
+          done
+          echo "Front no ar."

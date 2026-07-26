@@ -1,0 +1,32 @@
+# Front do H-hub: os estáticos do Flutter e a API na MESMA origem, de propósito — assim
+# o navegador não precisa de CORS e nada muda no lado do Go. Ver server/DEPLOY.md.
+server {
+    listen 80;
+
+    # Resolver do Docker + upstream numa variável. Sem a variável o nginx resolve o nome
+    # uma vez só, no boot: ele se recusaria a subir enquanto o container da API não
+    # existisse, e ficaria com o IP velho depois de um redeploy dela.
+    # Pegadinha: com `proxy_pass` em variável o nginx NÃO repassa a URI sozinho — daí o
+    # `$request_uri` explícito.
+    resolver 127.0.0.11 valid=30s;
+    set $api ${API_UPSTREAM};
+
+    # O bundle passa dos 40 MB (canvaskit + main.dart.js). Comprimir muda a vida de quem
+    # abre isso de fora da LAN.
+    gzip on;
+    gzip_types application/javascript application/json application/wasm image/svg+xml text/css;
+    gzip_min_length 1024;
+
+    # As rotas da API Go (ver a tabela no README da raiz).
+    location ~ ^/(auth|expenses) {
+        proxy_pass $api$request_uri;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location / {
+        root /usr/share/nginx/html;
+        # SPA: rota desconhecida devolve o index e o Flutter resolve no cliente.
+        try_files $uri $uri/ /index.html;
+    }
+}

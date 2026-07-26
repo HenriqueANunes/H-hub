@@ -1,0 +1,26 @@
+# Front web do H-hub para o homelab: um nginx que serve os estáticos do Flutter e faz
+# proxy da API Go na MESMA origem — por isso não existe CORS neste projeto.
+# A API é outra stack (ver server/docker-compose.yml); esta aqui só a alcança pela rede.
+services:
+  web:
+    build: .
+    container_name: h-hub-web
+    restart: unless-stopped
+    environment:
+      # Nome do container da API na rede Docker (`container_name` em server/docker-compose.yml).
+      API_UPSTREAM: http://h-hub-api:8080
+      # Trava o envsubst do entrypoint nesta única variável, pra ele não encostar em
+      # `$host`/`$request_uri` se um dia existir uma env var com esses nomes.
+      NGINX_ENVSUBST_FILTER: API_UPSTREAM
+    ports:
+      # Só na interface do Tailscale, igual à API e ao Postgres — nada de LAN nem de
+      # internet. 8090 é a API; 8080 é o Pi-hole e 8000 o Portainer, daí a 8091.
+      - "100.80.9.52:8091:80"
+    networks:
+      - postgres
+
+# Rede criada pela stack `postgres` (compartilhada). O nome vem do banco, mas é a rede
+# onde o `h-hub-api` está — é por ela que o proxy alcança a API.
+networks:
+  postgres:
+    external: true

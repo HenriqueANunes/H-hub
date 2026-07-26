@@ -9,6 +9,10 @@ self-hosted runner** na própria máquina faz o deploy a cada push na `master`.
 - **Exposição:** `100.80.9.52:8090` — só pela interface do Tailscale, igual ao Postgres.
   Nada de LAN, nada de internet.
 
+> O **front web** mora no mesmo servidor e no mesmo clone, mas é outra stack:
+> container `h-hub-web` em `100.80.9.52:8091`, com workflow próprio. Ver
+> [Front web](#front-web) no fim deste arquivo.
+
 ⚠️ **Porta 8090 no host, não 8080**: a 8080 do servidor é do Pi-hole, que roda em
 `network_mode: host`. Dentro do container a API continua escutando na 8080.
 
@@ -114,11 +118,45 @@ O workflow (`.github/workflows/deploy-api.yml`) só dispara em push que toque em
 flutter run -d linux --dart-define=API_BASE_URL=http://100.80.9.52:8090
 ```
 
+## Front web
+
+Segunda stack no mesmo clone, em `/home/hman/h-hub/app`.
+
+- **Container:** `h-hub-web` — nginx, também na rede Docker `postgres`
+- **Exposição:** `100.80.9.52:8091` (8090 é a API, 8080 é o [Pi-hole], 8000 o Portainer)
+- **Workflow:** `.github/workflows/deploy-web.yml`, com `paths: ['app/**']` — push que
+  mexe só no Go não rebuilda o Flutter, e vice-versa. **Mesmo runner** da API: o runner
+  é registrado por repositório e isto é um monorepo. Um runner roda um job por vez, então
+  um push que toque nos dois lados enfileira os deploys.
+
+O container faz duas coisas: serve os estáticos que o `flutter build web` gerou **e**
+faz `proxy_pass` de `/auth` e `/expenses` pro `h-hub-api:8080`. É de propósito — front e
+API na mesma origem significa **zero CORS** e, quando isto sair pro público em HTTPS,
+zero risco de mixed content. O upstream vem da env `API_UPSTREAM` (o nginx da imagem
+oficial roda `envsubst` nos templates no boot), o que permite testar a mesma imagem no
+desktop apontando pra outro endereço — ver o README da raiz.
+
+⚠️ O `proxy_pass` usa `resolver 127.0.0.11`, então o container **precisa estar numa rede
+Docker user-defined** (na bridge padrão o DNS embutido não existe e tudo vira 502). Aqui
+isso está garantido pela rede `postgres` do compose.
+
+```bash
+# subir/atualizar à mão (normalmente o CI faz)
+cd /home/hman/h-hub/app && docker compose up -d --build
+
+# logs
+docker logs -f h-hub-web
+```
+
+O primeiro build baixa o SDK do Flutter (1,5 GB, pinado na versão do `.tool-versions`) e
+leva vários minutos; os seguintes reaproveitam a camada. **Não precisa de `.env`** — o
+front não conhece segredo nenhum, o token vive no navegador.
+
 ## Pendências antes de expor publicamente
 
 - 🔒 **TLS** — o JWT viaja em texto no header `Authorization`. Hoje só roda no
   Tailscale, que já cifra; num Cloudflare Tunnel isso deixa de ser opcional.
-- 🔒 **Rate limit** em `POST /auth/login` e `/auth/register`.
-- **CORS** — necessário quando o Flutter web entrar.
+- 🔒 **Rate limit** em `POST /auth/login` e `/auth/register`. O front web torna isso mais
+  urgente no dia do túnel público: cadastro aberto na internet sem limitador.
 - **Healthcheck no compose** — a imagem é distroless (sem shell nem curl), então
   um `healthcheck` teria que vir de um endpoint próprio no binário.

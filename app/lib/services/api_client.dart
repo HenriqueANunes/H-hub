@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
 /// Erro vindo da API. A mensagem é o corpo que o Go escreveu no `http.Error`,
@@ -30,11 +30,17 @@ class UnauthorizedException extends ApiException {
 /// e traduz status HTTP em exceção.
 class ApiClient {
   /// Aponta pra outro servidor com:
-  /// `flutter run --dart-define=API_BASE_URL=http://100.80.9.52:8080`
-  static const baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8080',
-  );
+  /// `flutter run --dart-define=API_BASE_URL=http://100.80.9.52:8090`
+  static final String baseUrl = _resolveBaseUrl();
+
+  static String _resolveBaseUrl() {
+    const configured = String.fromEnvironment('API_BASE_URL');
+    if (configured.isNotEmpty) return configured;
+    // Na web o nginx serve o front e faz proxy de /auth e /expenses pra API, então
+    // ela mora na mesma origem da página — nada de CORS e nada de URL fixa no build.
+    if (kIsWeb) return Uri.base.origin;
+    return 'http://localhost:8080';
+  }
 
   static const _timeout = Duration(seconds: 10);
 
@@ -83,10 +89,11 @@ class ApiClient {
       response = await http.Response.fromStream(streamed);
     } on TimeoutException {
       throw ConnectionException('O servidor demorou demais pra responder.');
-    } on SocketException {
-      throw ConnectionException('Não foi possível conectar em $baseUrl.');
     } on http.ClientException catch (e) {
-      throw ConnectionException('Falha de conexão: ${e.message}');
+      // Cobre também a falha de socket do desktop: o package:http embrulha a
+      // SocketException num tipo que implementa ClientException. Tratar aqui evita
+      // o `dart:io`, que não existe na web.
+      throw ConnectionException('Não foi possível conectar em $baseUrl: ${e.message}');
     }
 
     return _decode(response);
